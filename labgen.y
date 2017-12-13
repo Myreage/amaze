@@ -25,6 +25,30 @@ pt
   : '(' expr ',' expr ')'
 ;
 
+declaration
+	: IDENT '=' xcst ';'
+;
+
+size
+	: 'SIZE' xcst ';'
+	| 'SIZE' xcst ',' xcst ';'
+;
+
+in
+	: 'IN' pt ';'
+;
+
+pt_list
+	: pt
+	| pt_list pt
+;
+
+out
+	: 'OUT' pt_list ';'
+;
+
+
+
 
 
 %%
