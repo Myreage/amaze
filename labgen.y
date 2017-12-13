@@ -21,10 +21,6 @@ expr
   | '(' expr ')'
 ;
 
-xcst
-  : IDENT '=' CNUM ';'  { int $1 = $3; }
-
-
 pt
   : '(' expr ',' expr ')'
 ;

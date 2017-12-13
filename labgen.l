@@ -1,7 +1,3 @@
-/*IDENT [a-z|A-Z]([0-9]|[a-z|A-Z])*
-CNUM (\+|\-)?[0-9]+
-DIR (NE|SE|SW|NW|N|S|E|W)*/
-
 %option noyywrap
 
 %%
