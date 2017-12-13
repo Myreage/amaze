@@ -30,6 +30,11 @@ pt
   : '(' expr ',' expr ')'
 ;
 
+range
+  : '[' xcst ':' xcst ':' xcst ']'
+  : '[' xcst ':' xcst ':' xcst '['
+;
+
 declaration
 	: IDENT '=' xcst ';'
 ;
