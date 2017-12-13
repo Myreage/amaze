@@ -22,11 +22,16 @@ expr
 ;
 
 xcst
-  : IDENT '=' CNUM ';'  { int $1 = $3; }
-
+  : expr
+;
 
 pt
   : '(' expr ',' expr ')'
+;
+
+range
+  : '[' xcst ':' xcst ':' xcst ']'
+  : '[' xcst ':' xcst ':' xcst '['
 ;
 
 
