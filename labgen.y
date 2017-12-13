@@ -7,6 +7,7 @@
 %token DIR
 %token CNUM
 
+
 %%
 
 expr
@@ -22,7 +23,7 @@ expr
 ;
 
 xcst
-  : expr
+	: expr
 ;
 
 pt
@@ -32,6 +33,36 @@ pt
 range
   : '[' xcst ':' xcst ':' xcst ']'
   : '[' xcst ':' xcst ':' xcst '['
+;
+
+declaration
+	: IDENT '=' xcst ';'
+;
+
+size
+	: 'SIZE' xcst ';'
+	| 'SIZE' xcst ',' xcst ';'
+;
+
+in
+	: 'IN' pt ';'
+;
+
+pt_list
+	: pt
+	| pt_list pt
+;
+
+out
+	: 'OUT' pt_list ';'
+;
+
+show
+	: 'SHOW'
+;
+
+ident_op
+	: 'IDENT' op'=' xcst ';'
 ;
 
 
