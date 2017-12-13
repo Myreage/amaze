@@ -7,6 +7,7 @@
 %token DIR
 %token CNUM
 
+
 %%
 
 expr
@@ -19,6 +20,10 @@ expr
   | expr '%' expr
   | expr ' ' expr
   | '(' expr ')'
+;
+
+xcst
+	: expr
 ;
 
 pt
@@ -47,7 +52,13 @@ out
 	: 'OUT' pt_list ';'
 ;
 
+show
+	: 'SHOW'
+;
 
+ident_op
+	: 'IDENT' op'=' xcst ';'
+;
 
 
 
