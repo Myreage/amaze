@@ -5,77 +5,74 @@
 
 %token IDENT
 %token DIR
+%token OUT
 %token CNUM
-
+%token SHOW
+%token SIZE
+%token IN
+%left '+' '-'
+%left '*' '/' '%'
+%left UMINUS
 
 %%
+
+labyrinthe
+	: line
+;
+
+line
+	: IN pt
+	| declaration ';'
+	| SIZE expr ';'
+	| SIZE expr ',' expr ';'
+	| OUT pt_list ';'
+	| SHOW
+	| IDENT '+' '=' expr ';'
+	| IDENT '-' '=' expr ';'
+	| IDENT '/' '=' expr ';'
+	| IDENT '%' '=' expr ';'
+	| IDENT '*' '=' expr ';'
+;
+
+pt_list
+	: pt {}
+	| pt_list pt {}
+;
+
+pt
+	: '(' expr ',' expr ')' {}
+;
+
+declaration
+	: IDENT '=' expr {}
+;
 
 expr
   : IDENT
   | CNUM
-  | expr '+' expr
-  | expr '-' expr
-  | expr '*' expr
+	| '-' expr %prec UMINUS {}
+	| '+' expr %prec UMINUS {}
+  | expr '+' expr {}
+  | expr '-' expr {}
+	| expr '*' expr
   | expr '/' expr
-  | expr '%' expr
-  | expr ' ' expr
-  | '(' expr ')'
-;
-
-xcst
-	: expr
-;
-
-pt
-  : '(' expr ',' expr ')'
+	| expr '%' expr
+  | '(' expr ')' {}
 ;
 
 range
-  : '[' xcst ':' xcst ':' xcst ']'
-  : '[' xcst ':' xcst ':' xcst '['
+  : '[' expr ':' expr ':' expr ']' {}
+  | '[' expr ':' expr ':' expr '[' {}
 ;
-
-declaration
-	: IDENT '=' xcst ';'
-;
-
-size
-	: 'SIZE' xcst ';'
-	| 'SIZE' xcst ',' xcst ';'
-;
-
-in
-	: 'IN' pt ';'
-;
-
-pt_list
-	: pt
-	| pt_list pt
-;
-
-out
-	: 'OUT' pt_list ';'
-;
-
-show
-	: 'SHOW'
-;
-
-ident_op
-	: 'IDENT' op'=' xcst ';'
-;
-
 
 
 %%
 #include "lex.yy.c"
-
 int yyerror(const char* mess)
 {
     fprintf(stderr,"FATAL: %s (near %s)\n",mess,yytext);
     exit(1);
 }
-
 int main()
 {
     return yyparse();
