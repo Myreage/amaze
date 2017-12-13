@@ -7,6 +7,7 @@
 %token DIR
 %token CNUM
 
+
 %%
 
 expr
@@ -22,11 +23,41 @@ expr
 ;
 
 xcst
-  : IDENT '=' CNUM ';'  { int $1 = $3; }
-
+	: expr
+;
 
 pt
   : '(' expr ',' expr ')'
+;
+
+declaration
+	: IDENT '=' xcst ';'
+;
+
+size
+	: 'SIZE' xcst ';'
+	| 'SIZE' xcst ',' xcst ';'
+;
+
+in
+	: 'IN' pt ';'
+;
+
+pt_list
+	: pt
+	| pt_list pt
+;
+
+out
+	: 'OUT' pt_list ';'
+;
+
+show
+	: 'SHOW'
+;
+
+ident_op
+	: 'IDENT' op'=' xcst ';'
 ;
 
 
