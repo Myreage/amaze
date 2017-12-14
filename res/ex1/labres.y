@@ -122,9 +122,12 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 		yyparse();
-		if(perdu)
+		if(perdu){
 			printf("Vous avez perdu...\n");
-		else
+			return 1;
+		}
+		else{
 			printf("Gagné !\n");
-    return 0;
+    	return 0;
+		}
 }
