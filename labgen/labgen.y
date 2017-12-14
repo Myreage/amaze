@@ -137,12 +137,22 @@ declaration
 
 %%
 #include "lex.yy.c"
+char* filename = "entry";
+
 int yyerror(const char* mess)
 {
-    fprintf(stderr,"line:%d %s (near %s)\n",yylineno,mess,yytext);
+    fprintf(stderr,"%s:%d: %s (near %s)\n",filename,yylineno,mess,yytext);
     exit(1);
 }
-int main()
+int main(int argc, char** argv)
 {
+	if(argc==2){
+		filename = argv[1];
+		yyin=fopen(argv[1],"r");
+	}
+	else if (argc!=1){
+		fprintf(stderr,"FATAL : Unexpected number of arguments\n");
+		exit(1);
+	}
     return yyparse();
 }
