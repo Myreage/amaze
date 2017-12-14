@@ -41,8 +41,8 @@ line
 	| declaration TERM
 	| SIZE expr TERM
 	| SIZE expr ',' expr TERM
-	| OUT pt_list ';'
-	| SHOW
+	| OUT pt_list TERM
+	| SHOW TERM
 	| IDENT '+' '=' expr TERM
 	| IDENT '-' '=' expr TERM
 	| IDENT '/' '=' expr TERM
