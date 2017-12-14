@@ -10,7 +10,6 @@ int perdu = 0;
 %token E
 %token W
 
-
 %%
 
 start
@@ -102,8 +101,6 @@ smt
 	| W smt
 	| E smt
 ;
-
-
 
 %%
 #include "lex.yy.c"
