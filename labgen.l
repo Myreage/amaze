@@ -1,7 +1,7 @@
 %option noyywrap
 %option yylineno
 %%
-(NE|SE|SW|NW|N|S|E|W) { return DIR; }
+("NE"|"SE"|"SW"|"NW"|"N"|"S"|"E"|"W") { return DIR; }
 "IN" {return IN;}
 "SIZE" {return SIZE;}
 "OUT" {return OUT;}
