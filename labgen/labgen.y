@@ -136,7 +136,7 @@ declaration
 ;
 
 %%
-#include "lex.yy.c"
+#include "labgen.yy.c"
 char* filename = "entry";
 
 int yyerror(const char* mess)

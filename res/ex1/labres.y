@@ -103,7 +103,7 @@ smt
 ;
 
 %%
-#include "lex.yy.c"
+#include "labresex1.yy.c"
 char* filename = "entry";
 
 int yyerror(const char* mess)

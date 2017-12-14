@@ -28,7 +28,7 @@ smt
 ;
 
 %%
-#include "lex.yy.c"
+#include "labresex2.yy.c"
 char* filename = "entry";
 
 int yyerror(const char* mess)
