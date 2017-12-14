@@ -141,7 +141,7 @@ char* filename = "entry";
 
 int yyerror(const char* mess)
 {
-    fprintf(stderr,"%s:line:%d %s (near %s)\n",filename,yylineno,mess,yytext);
+    fprintf(stderr,"%s:%d: %s (near %s)\n",filename,yylineno,mess,yytext);
     exit(1);
 }
 int main(int argc, char** argv)
