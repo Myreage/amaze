@@ -32,10 +32,11 @@
 
 labyrinthe
 	: line
+	| labyrinthe line
 ;
 
 line
-	: IN pt
+	: IN pt TERM
 	| TERM
 	| declaration TERM
 	| SIZE expr TERM
@@ -66,7 +67,7 @@ line
 	| TOGGLE R F pt pt TERM
 	| TOGGLE FOR ident_list IN range_list '(' expr ',' expr ')' TERM
 	| WH pt_arrow_list TERM
-	| MD pt dest_list
+	| MD pt dest_list TERM
 ;
 
 range_list
@@ -138,7 +139,7 @@ declaration
 #include "lex.yy.c"
 int yyerror(const char* mess)
 {
-    fprintf(stderr,"FATAL: %s (near %s)\n",mess,yytext);
+    fprintf(stderr,"line:%d %s (near %s)\n",yylineno,mess,yytext);
     exit(1);
 }
 int main()
