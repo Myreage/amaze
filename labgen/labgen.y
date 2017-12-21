@@ -30,24 +30,33 @@
 
 %%
 
-labyrinthe
-	: line
-	| labyrinthe line
+file
+	:	lines_before_size size lines_after_size_before_out in lines_after_size_before_out out lines_after_size
+	| lines_before_size size lines_after_size_before_out out lines_after_size in lines_after_size
 ;
 
-line
-	: IN pt TERM
-	| TERM
+line_before_size
+	: TERM
 	| declaration TERM
-	| SIZE expr TERM
-	| SIZE expr ',' expr TERM
-	| OUT pt_list TERM
-	| SHOW TERM
 	| IDENT '+' '=' expr TERM
 	| IDENT '-' '=' expr TERM
 	| IDENT '/' '=' expr TERM
 	| IDENT '%' '=' expr TERM
 	| IDENT '*' '=' expr TERM
+;
+
+lines_before_size
+	:
+	| line_before_size lines_before_size
+;
+
+size
+	: SIZE expr TERM
+	| SIZE expr ',' expr TERM
+;
+
+line_after_size_before_out
+	: TERM
 	| WALL TERM
 	| WALL PTA pt_list TERM
 	| WALL PTD pt pt_list_r TERM
@@ -68,6 +77,52 @@ line
 	| TOGGLE FOR ident_list IN range_list '(' expr ',' expr ')' TERM
 	| WH pt_arrow_list TERM
 	| MD pt dest_list TERM
+	| SHOW TERM
+;
+
+lines_after_size_before_out
+	:
+	| line_after_size_before_out lines_after_size_before_out
+;
+
+
+line_after_size
+	: TERM
+	| WALL TERM
+	| WALL PTA pt_list TERM
+	| WALL PTD pt pt_list_r TERM
+	| WALL R pt pt TERM
+	| WALL R F pt pt TERM
+	| WALL FOR ident_list IN range_list '(' expr ',' expr ')' TERM
+	| UNWALL TERM
+	| UNWALL PTA pt_list TERM
+	| UNWALL PTD pt pt_list_r TERM
+	| UNWALL R pt pt TERM
+	| UNWALL R F pt pt TERM
+	| UNWALL FOR ident_list IN range_list '(' expr ',' expr ')' TERM
+	| TOGGLE TERM
+	| TOGGLE PTA pt_list TERM
+	| TOGGLE PTD pt pt_list_r TERM
+	| TOGGLE R pt pt TERM
+	| TOGGLE R F pt pt TERM
+	| TOGGLE FOR ident_list IN range_list '(' expr ',' expr ')' TERM
+	| WH pt_arrow_list TERM
+	| MD pt dest_list TERM
+	| SHOW TERM
+	| OUT pt_list TERM
+;
+
+lines_after_size
+	:
+	| line_after_size lines_after_size
+;
+
+in
+	: IN pt TERM
+;
+
+out
+	: OUT pt_list TERM
 ;
 
 range_list
