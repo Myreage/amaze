@@ -3,10 +3,16 @@
 #include <stdlib.h>
 %}
 
-%token IDENT
-%token DIR
+
+%union {
+char string[256];
+char direction[2];
+int integer;
+}
+%token<chaine> IDENT
+%token<direction> DIR
 %token OUT
-%token CNUM
+%token<integer> CNUM
 %token WALL
 %token PTA
 %token PTD
@@ -30,24 +36,28 @@
 
 %%
 
-labyrinthe
-	: line
-	| labyrinthe line
+file
+	:	lines_before_size size lines_after_size in lines_after_size out lines_after_size
+	| lines_before_size size lines_after_size out lines_after_size in lines_after_size
 ;
 
-line
+in
 	: IN pt TERM
-	| TERM
-	| declaration TERM
-	| SIZE expr TERM
+;
+
+out
+	: OUT pt_list TERM
+;
+
+size
+	: SIZE expr TERM
 	| SIZE expr ',' expr TERM
+;
+
+line_after_size
+	:
 	| OUT pt_list TERM
-	| SHOW TERM
-	| IDENT '+' '=' expr TERM
-	| IDENT '-' '=' expr TERM
-	| IDENT '/' '=' expr TERM
-	| IDENT '%' '=' expr TERM
-	| IDENT '*' '=' expr TERM
+	| TERM
 	| WALL TERM
 	| WALL PTA pt_list TERM
 	| WALL PTD pt pt_list_r TERM
@@ -68,6 +78,19 @@ line
 	| TOGGLE FOR ident_list IN range_list '(' expr ',' expr ')' TERM
 	| WH pt_arrow_list TERM
 	| MD pt dest_list TERM
+	| SHOW TERM
+	| lines_after_size lines_after_size
+;
+
+lines_before_size
+	: TERM
+	| declaration TERM
+	| IDENT '+' '=' expr TERM
+	| IDENT '-' '=' expr TERM
+	| IDENT '/' '=' expr TERM
+	| IDENT '%' '=' expr TERM
+	| IDENT '*' '=' expr TERM
+	| lines_before_size lines_before_size
 ;
 
 range_list
