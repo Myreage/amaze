@@ -54,7 +54,7 @@ size
 	| SIZE expr ',' expr TERM
 ;
 
-line_after_size
+lines_after_size
 	:
 	| OUT pt_list TERM
 	| TERM
