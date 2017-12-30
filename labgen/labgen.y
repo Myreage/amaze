@@ -1,13 +1,114 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
-#include "linked_list.h"
+
+/********************************************/
+/****************LINKED LISTS****************/
+/********************************************/
+
+typedef struct t_liste {
+  int info;
+  struct t_liste *suivant;
+} Cellule, *Liste;
+
+/* Test de vacuité */
+
+int isEmpty(Liste liste){
+  if (liste == NULL) return 1;
+  else return 0;
+}
+
+/* Constructeur */
+
+Liste newList(int head, Liste tail){
+  Cellule *c;
+  c = (Cellule*)malloc(sizeof(Cellule));
+  c->info = head;
+  c->suivant = tail;
+  return c;
+}
+
+/* Affichage */
+
+void printList(Liste liste){
+  if(!isEmpty(liste)){
+    printf("[%d]->", liste->info);
+    printList(liste->suivant);
+  }
+  else{
+    printf("[]\n");
+  }
+}
+
+/*longueur liste*/
+int listLength(Liste liste){
+  if(!isEmpty(liste)) return 1 + listLength(liste->suivant);
+  else return 0;
+}
+
+Liste invertList(Liste liste) {
+  Liste res = NULL;
+  while (!isEmpty(liste)) {
+      Liste suivant = liste->suivant;
+      liste->suivant = res;
+      res = liste;
+      liste = suivant;
+  }
+  return res;
+}
+
+/*Recherche de la présence d'un élement*/
+int search(Liste liste, int e){
+  while(!isEmpty(liste)){
+    if (e==liste->info){
+      return 1;
+    }
+    liste = liste->suivant;
+    }
+
+    return 0;
+}
+
+/*Suppression de tous les élements e d'une liste*/
+Liste delete(int e, Liste liste){
+  Liste res=NULL;
+
+  if(liste->info == e){
+
+    return liste->suivant;
+
+  }
+
+  else{
+
+    while(!isEmpty(liste)){
+
+      if (liste->info != e){
+        res = newList(liste->info, res);
+      }
+      liste = liste->suivant;
+    }
+
+    return invertList(res);
+  }
+}
+/********************************************/
+/****************VARIABLES*******************/
+/********************************************/
+
+int size[2];
+Liste** maze;
+
 %}
+
+%union {
+	int valeur;
+}
 
 %token IDENT
 %token DIR
 %token OUT
-%token CNUM
+%token <valeur>CNUM
 %token WALL
 %token PTA
 %token PTD
@@ -23,6 +124,9 @@
 %token SIZE
 %token IN
 %token ARROW
+
+%type <valeur> expr
+
 %left '+' '-'
 %left '*' '/' '%'
 %left '('
@@ -52,8 +156,20 @@ lines_before_size
 ;
 
 size
-	: SIZE expr TERM
-	| SIZE expr ',' expr TERM
+	: SIZE expr TERM 	{
+											size[0]=$2;size[1]=$2;
+											maze = malloc($2*sizeof(Liste*));
+											for(int i=0;i<$2;i++){
+												maze[i] = malloc($2*sizeof(Liste));
+											}
+										}
+	| SIZE expr ',' expr TERM 	{
+																size[0]=$2;size[1]=$4;
+																maze = malloc($2*sizeof(Liste*));
+																for(int i=0;i<$2;i++){
+																	maze[i] = malloc($4*sizeof(Liste));
+																}
+															}
 ;
 
 line_after_size_before_out
@@ -176,7 +292,7 @@ r
 
 expr
   : IDENT
-  | CNUM
+  | CNUM {$$=$1;}
 	| '-' expr %prec UMINUS {}
 	| '+' expr %prec UMINUS {}
   | expr '+' expr {}
@@ -210,5 +326,6 @@ int main(int argc, char** argv)
 		fprintf(stderr,"FATAL : Unexpected number of arguments\n");
 		exit(1);
 	}
-    return yyparse();
+		int y = yyparse();
+    return y;
 }
