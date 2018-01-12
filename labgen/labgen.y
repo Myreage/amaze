@@ -359,20 +359,20 @@ r
 ;
 
 expr
-  : IDENT
-  | CNUM {$$=$1;}
-	| '-' expr %prec UMINUS {}
-	| '+' expr %prec UMINUS {}
-  | expr '+' expr {}
-  | expr '-' expr {}
-	| expr '*' expr
-  | expr '/' expr
-	| expr '%' expr
-  | '(' expr ')' {}
+  : IDENT                   { int val = find_val(variables, $1); $$=val; }
+  | CNUM                    { $$ = $1;  }
+	| '-' expr %prec UMINUS   { $$ = -$2;  }
+	| '+' expr %prec UMINUS   { $$ = $2;  }
+  | expr '+' expr           { $$ = $1 + $3;  }
+  | expr '-' expr           { $$ = $1 - $3;  }
+	| expr '*' expr           { $$ = $1 * $3;  }
+  | expr '/' expr           { $$ = $1 / $3;  }
+	| expr '%' expr           { $$ = $1 % $3;  }
+  | '(' expr ')'            { $$ = $2; }
 ;
 
 declaration
-	: IDENT '=' expr {}
+	: IDENT '=' expr          { variables = add_var(variables, $1, $3); }
 ;
 
 %%
