@@ -19,7 +19,7 @@
 "MD" {return MD;}
 "->" {return ARROW;}
 [a-zA-Z]([a-zA-Z]*[0-9]*)* { return IDENT; }
-[0-9]+  { return CNUM; }
+[0-9]+  { yylval.valeur = atoi(yytext);return CNUM; }
 
 
 #.* ;
