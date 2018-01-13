@@ -33,6 +33,126 @@
 		gl_pdt->in = p;
 	}
 
+	void wallAll(TdrawOpt opt){
+		Tpoint p;
+		for(int i=0;i<gl_lds->dy;i++){
+			for(int j=0;j<gl_lds->dx;j++){
+				p.x=i;
+				p.y=j;
+				lds_draw_pt(gl_lds, opt, p);
+			}
+		}
+	}
+	Tpoint sumPt(Tpoints* p){
+		Tpoint res;
+		res.x=0;
+		res.y=0;
+		for(int i=0;i<p->nb;i++){
+			res.x+=p->t[i].x;
+			res.y+=p->t[i].y;
+		}
+		return res;
+	}
+
+void drawRect(Tpoint p1,Tpoint2,TdrawOpt opt){
+	Tpoint to_draw;
+	if(p1.x<p2.x && p1.y<p2.y){	//cas hg->bd
+		to_draw = p1;
+		//arrête du haut
+		for(int i=p1.x;i<p2.x;i++){
+			to_draw.x = p1.x+i;
+			lds_draw_pt (gl_lds, opt, to_draw);
+		}
+		//arrête du bas
+		to_draw.x = p1.x;
+		to_draw.y = p2.y;
+		for(int i=p1.x;i<p2.x;i++){
+			to_draw.x = p1.x+i;
+			lds_draw_pt (gl_lds, opt, to_draw);
+		}
+		//arrête de gauche
+		to_draw = p1;
+		for(int i=p1.y;i<p2.y;i++){
+			to_draw.y = p1.y+i;
+			lds_draw_pt (gl_lds, opt, to_draw);
+		}
+		//arrête de droite
+		to_draw.x = p2.x;
+		to_draw.y = p1.y;
+		for(int i=p1.y;i<p2.y;i++){
+			to_draw.y = p1.y+i;
+			lds_draw_pt (gl_lds, opt, to_draw);
+		}
+
+	}
+	else if(p1.x<p2.x && p1.y>p2.y){	//cas bg->hd
+		//arrête du haut
+		to_draw.x = p1.x;
+		to_draw.y = p2.y;
+		for(int i=p1.x;i<p2.x;i++){
+			to_draw.x = p1.x+i;
+			lds_draw_pt (gl_lds, opt, to_draw);
+		}
+		//arrête du bas
+		to_draw = p1;
+		for(int i=p1.x;i<p2.x;i++){
+			to_draw.x = p1.x+i;
+			lds_draw_pt (gl_lds, opt, to_draw);
+		}
+		//arrête de gauche
+		to_draw = p1;
+		for(int i=p1.y;i<p2.y;i++){
+			to_draw.y = p1.y-i;
+			lds_draw_pt (gl_lds, opt, to_draw);
+		}
+		//arrête de droite
+		to_draw=p2;
+		for(int i=p1.y;i<p2.y;i++){
+			to_draw.y = p2.y+i;
+			lds_draw_pt (gl_lds, opt, to_draw);
+		}
+
+	}
+	else{
+		drawRect(p2,p1,opt);
+	}
+}
+
+void drawRectF(Tpoint p1,Tpoint2,TdrawOpt opt){
+	Tpoint to_draw;
+	if(p1.x<p2.x && p1.y<p2.y){	//cas hg->bd
+		for(int i=p1.x;i<p2.x;i++){
+			for(int j=p1.y;j<p2.y;j++){
+				to_draw.x = i;
+				to_draw.y = j;
+				lds_draw_pt (gl_lds, opt, to_draw);
+			}
+		}
+	}
+	else if(p1.x<p2.x && p1.y>p2.y){	//cas bg->hd
+		for(int i=p1.x;i<p2.x;i++){
+			for(int j=p2.y;j<p1.y;j++){
+				to_draw.x = i;
+				to_draw.y = j;
+				lds_draw_pt (gl_lds, opt, to_draw);
+			}
+		}
+	}
+	else{
+		drawRect(p2,p1,opt);
+	}
+}
+
+void ptd(Tpoints* p,TdrawOpt opt){
+	Tpoint counter=p->t[0];
+	Tpoint new_p;
+	for(int i=0;i<p->nb;i++){
+		new_p.x = counter.x + p->t[i].x;
+		new_p.y = counter.y + p->t[i].y;
+		lds_draw_pt (gl_lds, opt, new_p);
+	}
+}
+
 %}
 
 %union{
@@ -66,7 +186,6 @@
 %left UMINUS
 
 %%
-
 file
 	:	lines_before_size size lines_after_size_before_out in lines_after_size_before_out out lines_after_size
 	| lines_before_size size lines_after_size_before_out out lines_after_size in lines_after_size
@@ -94,23 +213,23 @@ size
 
 line_after_size_before_out
 	: TERM
-	| WALL TERM
-	| WALL PTA pt_list TERM
-	| WALL PTD pt pt_list_r TERM
-	| WALL R pt pt TERM
-	| WALL R F pt pt TERM
+	| WALL TERM {wallAll(LG_DrawWall);}
+	| WALL PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawWall, $3);}
+	| WALL PTD pt_list_r TERM {ptd(Tpoints* p,LG_DrawWall);}
+	| WALL R pt pt TERM {drawRect($3,$4,LG_DrawWall);}
+	| WALL R F pt pt TERM {drawRectF($3,$4,LG_DrawWall);}
 	| WALL FOR ident_list IN range_list '(' expr ',' expr ')' TERM
-	| UNWALL TERM
-	| UNWALL PTA pt_list TERM
-	| UNWALL PTD pt pt_list_r TERM
-	| UNWALL R pt pt TERM
-	| UNWALL R F pt pt TERM
+	| UNWALL TERM {wallAll(LG_DrawUnwall);}
+	| UNWALL PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawUnWall, $3);}
+	| UNWALL PTD pt pt_list_r TERM {ptd(Tpoints* p,LG_DrawUnWall);}
+	| UNWALL R pt pt TERM {drawRect($3,$4,LG_DrawUnWall);}
+	| UNWALL R F pt pt TERM {drawRectF($3,$4,LG_DrawUnWall);}
 	| UNWALL FOR ident_list IN range_list '(' expr ',' expr ')' TERM
-	| TOGGLE TERM
-	| TOGGLE PTA pt_list TERM
-	| TOGGLE PTD pt pt_list_r TERM
-	| TOGGLE R pt pt TERM
-	| TOGGLE R F pt pt TERM
+	| TOGGLE TERM {wallAll(LG_DrawToggle;}
+	| TOGGLE PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawToggle, $3);}
+	| TOGGLE PTD pt pt_list_r TERM {ptd(Tpoints* p,LG_DrawToggle);}
+	| TOGGLE R pt pt TERM {drawRect($3,$4,LG_DrawToggle);}
+	| TOGGLE R F pt pt TERM {drawRectF($3,$4,LG_DrawToggle);}
 	| TOGGLE FOR ident_list IN range_list '(' expr ',' expr ')' TERM
 	| WH pt_arrow_list TERM
 	| MD pt dest_list TERM
@@ -125,23 +244,23 @@ lines_after_size_before_out
 
 line_after_size
 	: TERM
-	| WALL TERM
-	| WALL PTA pt_list TERM
-	| WALL PTD pt pt_list_r TERM
-	| WALL R pt pt TERM
-	| WALL R F pt pt TERM
+	| WALL TERM {wallAll(LG_DrawWall);}
+	| WALL PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawWall, $3);}
+	| WALL PTD pt_list_r TERM {ptd(Tpoints* p,LG_DrawWall);}
+	| WALL R pt pt TERM {drawRect($3,$4,LG_DrawWall);}
+	| WALL R F pt pt TERM {drawRectF($3,$4,LG_DrawWall);}
 	| WALL FOR ident_list IN range_list '(' expr ',' expr ')' TERM
-	| UNWALL TERM
-	| UNWALL PTA pt_list TERM
-	| UNWALL PTD pt pt_list_r TERM
-	| UNWALL R pt pt TERM
-	| UNWALL R F pt pt TERM
+	| UNWALL TERM {wallAll(LG_DrawUnwall);}
+	| UNWALL PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawUnWall, $3);}
+	| UNWALL PTD pt pt_list_r TERM {ptd(Tpoints* p,LG_DrawUnWall);}
+	| UNWALL R pt pt TERM {drawRect($3,$4,LG_DrawUnWall);}
+	| UNWALL R F pt pt TERM {drawRectF($3,$4,LG_DrawUnWall);}
 	| UNWALL FOR ident_list IN range_list '(' expr ',' expr ')' TERM
-	| TOGGLE TERM
-	| TOGGLE PTA pt_list TERM
-	| TOGGLE PTD pt pt_list_r TERM
-	| TOGGLE R pt pt TERM
-	| TOGGLE R F pt pt TERM
+	| TOGGLE TERM {wallAll(LG_DrawToggle;}
+	| TOGGLE PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawToggle, $3);}
+	| TOGGLE PTD pt pt_list_r TERM {ptd(Tpoints* p,LG_DrawToggle);}
+	| TOGGLE R pt pt TERM {drawRect($3,$4,LG_DrawToggle);}
+	| TOGGLE R F pt pt TERM {drawRectF($3,$4,LG_DrawToggle);}
 	| TOGGLE FOR ident_list IN range_list '(' expr ',' expr ')' TERM
 	| WH pt_arrow_list TERM
 	| MD pt dest_list TERM
@@ -198,18 +317,34 @@ pt_list
 ;
 
 pt_list_r
-	: pt r
-	| pt_list_r pt r
-;
+	: p { Tpoints* p = pts_new_pt($1); $$ = p;}
+	| pt_list_r pt r {
+		Tpoints* res = $1
+		Tpoint p = $2;
+		pts_app_pt ($1, p);
+		Tpoint counter = p;
+		if($3==9999999999) {
+			counter = sumPt(res);
+			while(counter.x<gl_lds->dx && counter.y<gl_lds->dy){
+				pts_app_pt(plist,p);;
+				counter = sumPt(res);
+			}
+		}
+		else {
+			for(int i=0;i<$3;i++){
+				pts_app_pt(plist,p);;
+			}
+		}
+	}
 
 pt
 	: '(' expr ',' expr ')' {Tpoint p; p.x=$2; p.y=$4; $$=p;}
 ;
 
 r
-	:
-	| ':' expr
-	| ':' '*'
+	: {$$=1;}
+	| ':' expr {$$=$2;}
+	| ':' '*'	{$$=9999999999;}
 ;
 
 expr
