@@ -6,9 +6,16 @@
 	#include <errno.h>
 
 	#include "lib/top.h"
+	#include "lib/lds.h"
+	#include "lib/pdt.h"
 
 	/*======================================================================*/
 	/*= Global variables                                                   =*/
+
+	typedef struct _rangeList {
+	    int    nb;
+	    int t[101][3];
+	} rangeList;
 
 	const char* gl_progname;  // base name of running program.
 	const char* gl_infname;   // base name of input file name
@@ -19,14 +26,14 @@
 	void setOut(Tpoints* p)
 	{
 		int k = p->nb;
-		int list = p->t;
+		Tpoint *list = p->t;
 		for(int i=0;i<k;i++){
 			gl_lds->squares[list[i].x][list[i].y].kind = LDS_OUT;
 		}
 		gl_pdt->out = p;
 	}
 
-	void setIn(Tpoint* p)
+	void setIn(Tpoint p)
 	{
 		gl_lds->in = p;
 		gl_lds->squares[p.x][p.y].kind = LDS_IN;
@@ -54,7 +61,7 @@
 		return res;
 	}
 
-void drawRect(Tpoint p1,Tpoint2,TdrawOpt opt){
+void drawRect(Tpoint p1,Tpoint p2,TdrawOpt opt){
 	Tpoint to_draw;
 	if(p1.x<p2.x && p1.y<p2.y){	//cas hg->bd
 		to_draw = p1;
@@ -118,7 +125,7 @@ void drawRect(Tpoint p1,Tpoint2,TdrawOpt opt){
 	}
 }
 
-void drawRectF(Tpoint p1,Tpoint2,TdrawOpt opt){
+void drawRectF(Tpoint p1,Tpoint p2,TdrawOpt opt){
 	Tpoint to_draw;
 	if(p1.x<p2.x && p1.y<p2.y){	//cas hg->bd
 		for(int i=p1.x;i<p2.x;i++){
@@ -158,6 +165,10 @@ void ptd(Tpoints* p,TdrawOpt opt){
 %union{
 	int cst;
 	Cstr varname;
+	Tpoint point;
+	Tpoints* points;
+	rangeList rangeL;
+	int simplerange[3];
 }
 
 %token <varname> IDENT
@@ -179,6 +190,15 @@ void ptd(Tpoints* p,TdrawOpt opt){
 %token SIZE
 %token IN
 %token ARROW
+
+%type <cst> expr
+%type <point> pt
+%type <points> pt_list
+%type <cst> r
+%type <points> pt_list_r
+%type <simplerange> range
+%type <rangeL> range_list
+
 %left '+' '-'
 %left '*' '/' '%'
 %left '('
@@ -194,11 +214,11 @@ file
 line_before_size
 	: TERM
 	| declaration TERM
-	| IDENT '+' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);$$=*res+$4;}
-	| IDENT '-' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);$$=*res-$4;}
-	| IDENT '/' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);$$=*res/$4;}
-	| IDENT '%' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);$$=*res%$4;}
-	| IDENT '*' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);$$=*res*$4;}
+	| IDENT '+' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddEated (gl_pdt, $1, *res+$4);}
+	| IDENT '-' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddEated (gl_pdt, $1, *res-$4);}
+	| IDENT '/' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddEated (gl_pdt, $1, *res/$4);}
+	| IDENT '%' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddEated (gl_pdt, $1, *res%$4);}
+	| IDENT '*' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddEated (gl_pdt, $1, *res*$4);}
 ;
 
 lines_before_size
@@ -215,21 +235,21 @@ line_after_size_before_out
 	: TERM
 	| WALL TERM {wallAll(LG_DrawWall);}
 	| WALL PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawWall, $3);}
-	| WALL PTD pt_list_r TERM {ptd(Tpoints* p,LG_DrawWall);}
+	| WALL PTD pt_list_r TERM {ptd($3,LG_DrawWall);}
 	| WALL R pt pt TERM {drawRect($3,$4,LG_DrawWall);}
-	| WALL R F pt pt TERM {drawRectF($3,$4,LG_DrawWall);}
+	| WALL R F pt pt TERM {drawRectF($4,$5,LG_DrawWall);}
 	| WALL FOR ident_list IN range_list '(' expr ',' expr ')' TERM
 	| UNWALL TERM {wallAll(LG_DrawUnwall);}
-	| UNWALL PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawUnWall, $3);}
-	| UNWALL PTD pt pt_list_r TERM {ptd(Tpoints* p,LG_DrawUnWall);}
-	| UNWALL R pt pt TERM {drawRect($3,$4,LG_DrawUnWall);}
-	| UNWALL R F pt pt TERM {drawRectF($3,$4,LG_DrawUnWall);}
+	| UNWALL PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawUnwall, $3);}
+	| UNWALL PTD pt_list_r TERM {ptd($3,LG_DrawUnwall);}
+	| UNWALL R pt pt TERM {drawRect($3,$4,LG_DrawUnwall);}
+	| UNWALL R F pt pt TERM {drawRectF($4,$5,LG_DrawUnwall);}
 	| UNWALL FOR ident_list IN range_list '(' expr ',' expr ')' TERM
-	| TOGGLE TERM {wallAll(LG_DrawToggle;}
+	| TOGGLE TERM {wallAll(LG_DrawToggle);}
 	| TOGGLE PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawToggle, $3);}
-	| TOGGLE PTD pt pt_list_r TERM {ptd(Tpoints* p,LG_DrawToggle);}
+	| TOGGLE PTD pt_list_r TERM {ptd($3,LG_DrawToggle);}
 	| TOGGLE R pt pt TERM {drawRect($3,$4,LG_DrawToggle);}
-	| TOGGLE R F pt pt TERM {drawRectF($3,$4,LG_DrawToggle);}
+	| TOGGLE R F pt pt TERM {drawRectF($4,$5,LG_DrawToggle);}
 	| TOGGLE FOR ident_list IN range_list '(' expr ',' expr ')' TERM
 	| WH pt_arrow_list TERM
 	| MD pt dest_list TERM
@@ -246,21 +266,21 @@ line_after_size
 	: TERM
 	| WALL TERM {wallAll(LG_DrawWall);}
 	| WALL PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawWall, $3);}
-	| WALL PTD pt_list_r TERM {ptd(Tpoints* p,LG_DrawWall);}
+	| WALL PTD pt_list_r TERM {ptd($3,LG_DrawWall);}
 	| WALL R pt pt TERM {drawRect($3,$4,LG_DrawWall);}
-	| WALL R F pt pt TERM {drawRectF($3,$4,LG_DrawWall);}
+	| WALL R F pt pt TERM {drawRectF($4,$5,LG_DrawWall);}
 	| WALL FOR ident_list IN range_list '(' expr ',' expr ')' TERM
 	| UNWALL TERM {wallAll(LG_DrawUnwall);}
-	| UNWALL PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawUnWall, $3);}
-	| UNWALL PTD pt pt_list_r TERM {ptd(Tpoints* p,LG_DrawUnWall);}
-	| UNWALL R pt pt TERM {drawRect($3,$4,LG_DrawUnWall);}
-	| UNWALL R F pt pt TERM {drawRectF($3,$4,LG_DrawUnWall);}
+	| UNWALL PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawUnwall, $3);}
+	| UNWALL PTD pt_list_r TERM {ptd($3,LG_DrawUnwall);}
+	| UNWALL R pt pt TERM {drawRect($3,$4,LG_DrawUnwall);}
+	| UNWALL R F pt pt TERM {drawRectF($4,$5,LG_DrawUnwall);}
 	| UNWALL FOR ident_list IN range_list '(' expr ',' expr ')' TERM
-	| TOGGLE TERM {wallAll(LG_DrawToggle;}
+	| TOGGLE TERM {wallAll(LG_DrawToggle);}
 	| TOGGLE PTA pt_list TERM {lds_draw_pts(gl_lds, LG_DrawToggle, $3);}
-	| TOGGLE PTD pt pt_list_r TERM {ptd(Tpoints* p,LG_DrawToggle);}
+	| TOGGLE PTD pt_list_r TERM {ptd($3,LG_DrawToggle);}
 	| TOGGLE R pt pt TERM {drawRect($3,$4,LG_DrawToggle);}
-	| TOGGLE R F pt pt TERM {drawRectF($3,$4,LG_DrawToggle);}
+	| TOGGLE R F pt pt TERM {drawRectF($4,$5,LG_DrawToggle);}
 	| TOGGLE FOR ident_list IN range_list '(' expr ',' expr ')' TERM
 	| WH pt_arrow_list TERM
 	| MD pt dest_list TERM
@@ -275,24 +295,24 @@ lines_after_size
 
 in
 	: IN pt TERM {setIn($2);}
-		}
+
 ;
 
 out
 	: OUT pt_list TERM {setOut($2);}
-	}
+
 ;
 
 range_list
-	: range
-	| range_list range
+	: range {rangeList res; res.t[0][0]=$1[0];res.t[0][1]=$1[1];res.t[0][2]=$1[2];res.nb=1;$$=res;}
+	| range_list range {rangeList res=$1;int i = res.nb;res.t[i][0]=$2[0];res.t[i][1]=$2[1];res.t[i][2]=$2[2];res.nb=i+1;$$=res;}
 ;
 
 range
-  : '[' expr ':' expr ':' expr ']' {}
-  | '[' expr ':' expr ':' expr '[' {}
-	| '[' expr ':' expr  ']' {}
-	| '[' expr ':' expr  '[' {}
+  : '[' expr ':' expr ':' expr ']' {$$[0]=$2;$$[1]=$4;$$[2]=$6;}
+  | '[' expr ':' expr ':' expr '[' {$$[0]=$2;$$[1]=$4-1;$$[2]=$6;}
+	| '[' expr ':' expr  ']' {$$[0]=$2;$$[1]=$4;$$[2]=1;}
+	| '[' expr ':' expr  '[' {$$[0]=$2;$$[1]=$4-1;$$[2]=1;}
 ;
 
 
@@ -317,17 +337,17 @@ pt_list
 ;
 
 pt_list_r
-	: p { Tpoints* p = pts_new_pt($1); $$ = p;}
+	: pt { Tpoints* p = pts_new_pt($1); $$ = p;}
 	| pt_list_r pt r {
-		Tpoints* res = $1
+		Tpoints* plist = $1;
 		Tpoint p = $2;
-		pts_app_pt ($1, p);
+		pts_app_pt (plist, p);
 		Tpoint counter = p;
 		if($3==9999999999) {
-			counter = sumPt(res);
+			counter = sumPt(plist);
 			while(counter.x<gl_lds->dx && counter.y<gl_lds->dy){
 				pts_app_pt(plist,p);;
-				counter = sumPt(res);
+				counter = sumPt(plist);
 			}
 		}
 		else {
@@ -335,6 +355,7 @@ pt_list_r
 				pts_app_pt(plist,p);;
 			}
 		}
+		$$=plist;
 	}
 
 pt

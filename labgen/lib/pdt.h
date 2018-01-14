@@ -20,7 +20,7 @@
 
 struct _Tpdt {
     Tvars*   vars;
-    Tpoint* in;
+    Tpoint in;
     Tpoints* out;
     // worm holes
     int whnb;
