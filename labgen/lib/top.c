@@ -12,6 +12,8 @@
 #include <stdarg.h>
 
 #include "top.h"
+#include "lds.h"
+#include "pdt.h"
 
 /*======================================================================*/
 
@@ -37,10 +39,42 @@ extern char* u_strdup (Cstr str)
     return dup;
 }
 
+extern int lg_sem (Tlds*ds, const Tpdt*pdt){
+	
+	//RS1
+	if(ds->dx < 3 || ds->dy < 3){	//check size
+		return 1;
+	}
+
+	//RS2
+
+	//RS3
+	Tpoints *sorties = pdt->out;
+	if(sorties->nb<=0){
+		return 1;
+	}
+	for(int i=0;i<sorties->nb;i++){
+		if(sorties->t[i].x == ds->in.x || sorties->t[i].y == ds->in.y){
+			return 1;
+		}
+	}
+
+	//RS4
+	if(!lds_checkborder_pt(ds, ds->in)){
+		return 1;
+	}
+	for(int i=0;i<sorties->nb;i++){
+		if(!lds_checkborder_pt(ds, sorties->t[i])){
+			return 1;
+		}
+	}
+
+}
+
 /*======================================================================*/
 
 extern void u_noMoreMem()
-{ 
+{
     fprintf(stderr,"%s:no more memory\n",gl_progname);
     exit(1);
 }

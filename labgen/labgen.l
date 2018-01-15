@@ -1,7 +1,26 @@
 %option noyywrap
 %option yylineno
 %%
-("NE"|"SE"|"SW"|"NW"|"N"|"S"|"E"|"W") { return DIR; }
+("NE"|"SE"|"SW"|"NW"|"N"|"S"|"E"|"W") {char *c = strdup(yytext);
+	if(strcmp(c,"N"))
+		yylval.valeur = 0;
+	else if(strcmp(c,"NE"))
+		yylval.valeur = 1;
+	else if(strcmp(c,"E"))
+		yylval.valeur = 2;
+	else if(strcmp(c,"SE"))
+		yylval.valeur = 3;
+	else if(strcmp(c,"S"))
+		yylval.valeur = 4;
+	else if(strcmp(c,"SW"))
+		yylval.valeur = 5;
+	else if(strcmp(c,"W"))
+		yylval.valeur = 6;
+	else if(strcmp(c,"NW"))
+		yylval.valeur = 7;
+
+
+	return DIR; }
 "IN" {return IN;}
 "SIZE" {return SIZE;}
 "OUT" {return OUT;}
@@ -18,7 +37,7 @@
 "WH" {return WH;}
 "MD" {return MD;}
 "->" {return ARROW;}
-[a-zA-Z]([a-zA-Z]*[0-9]*)* { return IDENT; }
+[a-zA-Z]([a-zA-Z]*[0-9]*)* { yylval.string = strdup(yytext);return IDENT; }
 [0-9]+  { yylval.valeur = atoi(yytext);return CNUM; }
 
 

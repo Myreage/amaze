@@ -17,6 +17,12 @@
 	    int t[101][3];
 	} rangeList;
 
+	typedef struct _distList {
+	    int    nb;
+	    Tpoint t[8];
+			int d[8];
+	} distList;
+
 	const char* gl_progname;  // base name of running program.
 	const char* gl_infname;   // base name of input file name
 	Tpdt* gl_pdt;             // parser private data
@@ -165,6 +171,8 @@ void ptd(Tpoints* p,TdrawOpt opt){
 %union{
 	int cst;
 	Cstr varname;
+	distList distlist;
+	int dir;
 	Tpoint point;
 	Tpoints* points;
 	rangeList rangeL;
@@ -172,7 +180,7 @@ void ptd(Tpoints* p,TdrawOpt opt){
 }
 
 %token <varname> IDENT
-%token DIR
+%token <dir> DIR
 %token OUT
 %token <cst> CNUM
 %token WALL
@@ -196,8 +204,10 @@ void ptd(Tpoints* p,TdrawOpt opt){
 %type <points> pt_list
 %type <cst> r
 %type <points> pt_list_r
+%type <points> pt_arrow_list
 %type <simplerange> range
 %type <rangeL> range_list
+%type <distlist> dest_list
 
 %left '+' '-'
 %left '*' '/' '%'
@@ -251,8 +261,13 @@ line_after_size_before_out
 	| TOGGLE R pt pt TERM {drawRect($3,$4,LG_DrawToggle);}
 	| TOGGLE R F pt pt TERM {drawRectF($4,$5,LG_DrawToggle);}
 	| TOGGLE FOR ident_list IN range_list '(' expr ',' expr ')' TERM
-	| WH pt_arrow_list TERM
-	| MD pt dest_list TERM
+	| WH pt_arrow_list TERM {for(int i=0;i<$2->nb;i++){pdt_wormhole_add(gl_pdt, $2->t[i], $2->t[i+1]);}}
+	| MD pt dest_list TERM {Tsqmd *md = pdt_magicdoor_getcreate(gl_pdt,gl_lds,$2);
+		for(int i=0;i<$3.nb;i++){
+			lds_sqmd_update(md, $3.d[i], $3.t[i]);
+		}
+	}
+
 	| SHOW TERM
 ;
 
@@ -282,7 +297,7 @@ line_after_size
 	| TOGGLE R pt pt TERM {drawRect($3,$4,LG_DrawToggle);}
 	| TOGGLE R F pt pt TERM {drawRectF($4,$5,LG_DrawToggle);}
 	| TOGGLE FOR ident_list IN range_list '(' expr ',' expr ')' TERM
-	| WH pt_arrow_list TERM
+	| WH pt_arrow_list TERM {for(int i=0;i<$2->nb;i++){pdt_wormhole_add(gl_pdt, $2->t[i], $2->t[i+1]);}}
 	| MD pt dest_list TERM
 	| SHOW TERM
 	| OUT pt_list TERM {setOut($2);}
@@ -317,13 +332,13 @@ range
 
 
 pt_arrow_list
-	: pt
-	| pt ARROW pt_arrow_list
+	: pt ARROW pt {Tpoints* p = pts_new_pt($1);pts_app_pt (p, $3); $$ = p; }
+	| pt ARROW pt_arrow_list {pts_app_pt ($3, $1); $$ = $3;}
 ;
 
 dest_list
-	: DIR pt
-	| DIR pt dest_list
+	: DIR pt {distList res; res.nb=1;res.t[0]=$2;res.d[0]=$1;$$=res;}
+	| DIR pt dest_list {distList res=$3; int i=res.nb;res.t[i]=$2;res.d[i]=$1;$$=res;} 	/*DIRECTION PRESENTE UNE SEULE FOIS A SECURISER*/
 ;
 
 ident_list
