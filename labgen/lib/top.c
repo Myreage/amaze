@@ -40,33 +40,73 @@ extern char* u_strdup (Cstr str)
 }
 
 extern int lg_sem (Tlds*ds, const Tpdt*pdt){
-	
+
+	Tpoint entree = ds->in;
+	Tpoints *sorties = pdt->out;
+
 	//RS1
 	if(ds->dx < 3 || ds->dy < 3){	//check size
 		return 1;
 	}
 
 	//RS2
+	for(int i=0;i<sorties.nb;i++){
+		if(sorties->t[i].x == entree.x && sorties->t[i].y == entree.y)
+			return 1;
+	}
+	if(ds->squares[entree.x][entree.y].opt == LDS_OptWH)
+		return 1;
 
 	//RS3
-	Tpoints *sorties = pdt->out;
 	if(sorties->nb<=0){
 		return 1;
 	}
 	for(int i=0;i<sorties->nb;i++){
-		if(sorties->t[i].x == ds->in.x || sorties->t[i].y == ds->in.y){
+		if(ds->squares[sorties->t[i].x][sorties->t[i].y].opt == LDS_OptWH)
 			return 1;
-		}
 	}
 
 	//RS4
-	if(!lds_checkborder_pt(ds, ds->in)){
+	if(!lds_checkborder_pt(ds, ds->in))
 		return 1;
-	}
+
 	for(int i=0;i<sorties->nb;i++){
-		if(!lds_checkborder_pt(ds, sorties->t[i])){
+		if(!lds_checkborder_pt(ds, sorties->t[i]))
 			return 1;
+	}
+
+	//RS5 - DONE par yacc
+
+	//RS6
+	for(int i=0;i<PDT_WHSIZE;i++){
+		if(pdt->whin[i] == NULL)
+			break;
+		if(!lds_check_pt(ds, pdt->whin[i]))
+			return 1;
+	}
+	for(int i=0;i<PDT_WHSIZE;i++){
+		if(pdt->whout[i] == NULL)
+			break;
+		if(!lds_check_pt(ds, pdt->whout[i]))
+			return 1;
+	}
+
+	//RS7
+	for(int i=0;i<pdt->md->nb;i++){
+			for(int j=0;j<LG_WrNb;j++){
+				if(ds->squares[pdt->md->t[i].x][pdt->md->t[i].y]->u.mdp->t[j].chg){
+					if(!lds_check_pt(ds, ds->squares[pdt->md->t[i].x][pdt->md->t[i].y]->u.mdp->t[j].dest))
+						return 1;
+			}
 		}
+	}
+
+	//RS8 TODO dans le yacc
+
+	//RS9 euh je crois que c'est bon
+	//R10 TODO dans le yacc
+	//RS10 TODO warning
+
 	}
 
 }
