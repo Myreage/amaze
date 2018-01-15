@@ -3,13 +3,32 @@ CC=cc
 CFLAGS=-lfl
 EXEC=ex2
 SRCGEN=./labgen/
+SRCLIB=./labgen/lib/
 SRCEX2=./res/ex2/
 SRCEX1=./res/ex1/
 
 all: gen ex1 ex2
 
-gen: labgen.tab.c
-	$(CC) -o $(SRCGEN)labgen $(SRCGEN)labgen.tab.c $(CFLAGS)
+gen: labgen.tab.c pdt.o lds.o top.o vars.o points.o wr.o
+	$(CC) -o $(SRCGEN)labgen $(SRCGEN)labgen.tab.c wr.o vars.o points.o pdt.o lds.o top.o $(CFLAGS)
+
+pdt.o:
+	$(CC) -c $(SRCLIB)pdt.c
+
+lds.o:
+	$(CC) -c $(SRCLIB)lds.c
+
+vars.o:
+	$(CC) -c $(SRCLIB)vars.c
+
+wr.o:
+	$(CC) -c $(SRCLIB)wr.c
+
+points.o:
+	$(CC) -c $(SRCLIB)points.c
+
+top.o:
+	$(CC) -c $(SRCLIB)top.c
 
 labgen.tab.c: labgen.yy.c $(SRCGEN)labgen.y
 	yacc -o  $(SRCGEN)labgen.tab.c  $(SRCGEN)labgen.y
@@ -37,7 +56,7 @@ labresex2.yy.c :
 
 
 clean: clnex1
-	rm -rf ./labgen/*.c ./labgen/labgen
+	rm -rf ./labgen/*.c ./labgen/labgen ./*.o
 
 clnex1: clnex2
 	rm -rf ./res/ex1/*.c ./res/ex1/ex1

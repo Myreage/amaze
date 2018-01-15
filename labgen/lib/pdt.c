@@ -26,7 +26,6 @@ extern Tpdt * pdt_new ()
 extern void   pdt_free(Tpdt *pdt)
 {
     vars_free( pdt->vars );
-    pts_free( pdt->in );
     pts_free( pdt->out );
     pts_free( pdt->md );
     free( pdt );
@@ -48,7 +47,7 @@ extern int  pdt_var_get(Tpdt* pdt, Cstr vn, int*v)
     Tvar* found = vars_get(pdt->vars,vn);
     if ( found!=0 ) {
         *v = found->val;
-    } 
+    }
     return found==0;
 }
 
