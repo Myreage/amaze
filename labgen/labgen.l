@@ -3,21 +3,21 @@
 %%
 ("NE"|"SE"|"SW"|"NW"|"N"|"S"|"E"|"W") {char *c = strdup(yytext);
 	if(strcmp(c,"N"))
-		yylval.valeur = 0;
+		yylval.dir = 0;
 	else if(strcmp(c,"NE"))
-		yylval.valeur = 1;
+		yylval.dir = 1;
 	else if(strcmp(c,"E"))
-		yylval.valeur = 2;
+		yylval.dir = 2;
 	else if(strcmp(c,"SE"))
-		yylval.valeur = 3;
+		yylval.dir = 3;
 	else if(strcmp(c,"S"))
-		yylval.valeur = 4;
+		yylval.dir = 4;
 	else if(strcmp(c,"SW"))
-		yylval.valeur = 5;
+		yylval.dir = 5;
 	else if(strcmp(c,"W"))
-		yylval.valeur = 6;
+		yylval.dir = 6;
 	else if(strcmp(c,"NW"))
-		yylval.valeur = 7;
+		yylval.dir = 7;
 
 
 	return DIR; }
@@ -37,8 +37,8 @@
 "WH" {return WH;}
 "MD" {return MD;}
 "->" {return ARROW;}
-[a-zA-Z]([a-zA-Z]*[0-9]*)* { yylval.string = strdup(yytext);return IDENT; }
-[0-9]+  { yylval.valeur = atoi(yytext);return CNUM; }
+[a-zA-Z]([a-zA-Z]*[0-9]*)* { yylval.varname = strdup(yytext);return IDENT; }
+[0-9]+  { yylval.cst = atoi(yytext);return CNUM; }
 
 
 #.* ;

@@ -26,8 +26,8 @@ extern Tlds * lds_new_lds(const Tlds* lds)
     int x,y;
     Tlds* ret = u_malloc( sizeof(*ret) );
     memcpy(ret,lds,sizeof(*ret));
-    for (x=0 ; x<lds->dx ; x+=1) 
-        for (y=0 ; y<lds->dy ; y+=1) 
+    for (x=0 ; x<lds->dx ; x+=1)
+        for (y=0 ; y<lds->dy ; y+=1)
             if (ret->squares[x][y].opt==LDS_OptMD)
                 ret->squares[x][y].sq_mdp = lds_sqmd_new_sqmd(
                         ret->squares[x][y].sq_mdp);
@@ -37,8 +37,8 @@ extern Tlds * lds_new_lds(const Tlds* lds)
 extern void   lds_free(Tlds *ds)
 {
     int x,y;
-    for (x=0 ; x<ds->dx ; x+=1) 
-        for (y=0 ; y<ds->dy ; y+=1) 
+    for (x=0 ; x<ds->dx ; x+=1)
+        for (y=0 ; y<ds->dy ; y+=1)
             if (ds->squares[x][y].opt==LDS_OptMD)
                 lds_sqmd_free( ds->squares[x][y].sq_mdp );
     free( ds );
@@ -61,10 +61,12 @@ extern void lds_draw_pt (Tlds* ds, TdrawOpt dopt, Tpoint pt)
 #endif
     switch ( dopt ) {
         case LG_DrawWall:
-            ds->squares[pt.x][pt.y].kind=LDS_WALL;
+						if ((ds->squares[pt.x][pt.y].kind==LDS_FREE) && (ds->squares[pt.x][pt.y].opt==LDS_OptNone))
+            	ds->squares[pt.x][pt.y].kind=LDS_WALL;
             break;
         case LG_DrawUnwall:
-            ds->squares[pt.x][pt.y].kind=LDS_FREE;
+						if (ds->squares[pt.x][pt.y].kind==LDS_WALL)
+            	ds->squares[pt.x][pt.y].kind=LDS_FREE;
             break;
         case LG_DrawToggle:
             if ( ds->squares[pt.x][pt.y].kind==LDS_FREE )
@@ -193,7 +195,7 @@ static void lds_dump_TMB(Tlds* ds, FILE* ostream,int hlen)
     for (x=0 ; x<ds->dx ; x+=1) {
         if (x!=0)
             fwrite(&bdTx,1,1,ostream);
-        for (i=0; i<hlen ; i++) 
+        for (i=0; i<hlen ; i++)
             fwrite(&bdTm,1,1,ostream);
     }
     fprintf(ostream,"%c\n",bdTe);

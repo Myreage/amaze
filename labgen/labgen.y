@@ -9,6 +9,8 @@
 	#include "lib/lds.h"
 	#include "lib/pdt.h"
 
+	int yydebug=1;
+
 	/*======================================================================*/
 	/*= Global variables                                                   =*/
 
@@ -48,8 +50,8 @@
 
 	void wallAll(TdrawOpt opt){
 		Tpoint p;
-		for(int i=0;i<gl_lds->dy;i++){
-			for(int j=0;j<gl_lds->dx;j++){
+		for(int i=0;i<gl_lds->dx;i++){
+			for(int j=0;j<gl_lds->dy;j++){
 				p.x=i;
 				p.y=j;
 				lds_draw_pt(gl_lds, opt, p);
@@ -157,14 +159,17 @@ void drawRectF(Tpoint p1,Tpoint p2,TdrawOpt opt){
 }
 
 void ptd(Tpoints* p,TdrawOpt opt){
-	Tpoint counter=p->t[0];
-	Tpoint new_p;
+		Tpoint new_p;
+		new_p.x = 0;
+		new_p.y = 0;
 	for(int i=0;i<p->nb;i++){
-		new_p.x = counter.x + p->t[i].x;
-		new_p.y = counter.y + p->t[i].y;
+		new_p.x += p->t[i].x;
+		new_p.y += p->t[i].y;
 		lds_draw_pt (gl_lds, opt, new_p);
 	}
 }
+
+
 
 %}
 
@@ -224,11 +229,11 @@ file
 line_before_size
 	: TERM
 	| declaration TERM
-	| IDENT '+' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddEated (gl_pdt, $1, *res+$4);}
-	| IDENT '-' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddEated (gl_pdt, $1, *res-$4);}
-	| IDENT '/' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddEated (gl_pdt, $1, *res/$4);}
-	| IDENT '%' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddEated (gl_pdt, $1, *res%$4);}
-	| IDENT '*' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddEated (gl_pdt, $1, *res*$4);}
+	| IDENT '+' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddCloned (gl_pdt, $1, *res+$4);}
+	| IDENT '-' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddCloned (gl_pdt, $1, *res-$4);}
+	| IDENT '/' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddCloned (gl_pdt, $1, *res/$4);}
+	| IDENT '%' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddCloned(gl_pdt, $1, *res%$4);}
+	| IDENT '*' '=' expr TERM {int *res; pdt_var_get(gl_pdt,$1,res);pdt_var_chgOrAddCloned (gl_pdt, $1, *res*$4);}
 ;
 
 lines_before_size
@@ -237,8 +242,8 @@ lines_before_size
 ;
 
 size
-	: SIZE expr TERM {lds_size_set(gl_lds, $2, $2);}
-	| SIZE expr ',' expr TERM {lds_size_set(gl_lds, $2, $4);}
+	: SIZE expr TERM {lds_size_set(gl_lds, $2+1, $2+1);}
+	| SIZE expr ',' expr TERM {lds_size_set(gl_lds, $2+1, $4+1);}
 ;
 
 line_after_size_before_out
@@ -268,7 +273,7 @@ line_after_size_before_out
 		}
 	}
 
-	| SHOW TERM
+	| SHOW TERM {lds_dump(gl_lds,stdout);}
 ;
 
 lines_after_size_before_out
@@ -297,9 +302,9 @@ line_after_size
 	| TOGGLE R pt pt TERM {drawRect($3,$4,LG_DrawToggle);}
 	| TOGGLE R F pt pt TERM {drawRectF($4,$5,LG_DrawToggle);}
 	| TOGGLE FOR ident_list IN range_list '(' expr ',' expr ')' TERM
-	| WH pt_arrow_list TERM {for(int i=0;i<$2->nb;i++){pdt_wormhole_add(gl_pdt, $2->t[i], $2->t[i+1]);}}
+	| WH pt_arrow_list TERM {for(int i=0;i<$2->nb-1;i++){pdt_wormhole_add(gl_pdt, $2->t[i], $2->t[i+1]);}}
 	| MD pt dest_list TERM
-	| SHOW TERM
+	| SHOW TERM {lds_dump(gl_lds,stdout);}
 	| OUT pt_list TERM {setOut($2);}
 ;
 
@@ -333,7 +338,7 @@ range
 
 pt_arrow_list
 	: pt ARROW pt {Tpoints* p = pts_new_pt($1);pts_app_pt (p, $3); $$ = p; }
-	| pt ARROW pt_arrow_list {pts_app_pt ($3, $1); $$ = $3;}
+	| pt_arrow_list ARROW pt {pts_app_pt ($1, $3); $$ = $1;}
 ;
 
 dest_list
@@ -358,7 +363,7 @@ pt_list_r
 		Tpoint p = $2;
 		pts_app_pt (plist, p);
 		Tpoint counter = p;
-		if($3==9999999999) {
+		if($3==999999) {
 			counter = sumPt(plist);
 			while(counter.x<gl_lds->dx && counter.y<gl_lds->dy){
 				pts_app_pt(plist,p);;
@@ -366,7 +371,7 @@ pt_list_r
 			}
 		}
 		else {
-			for(int i=0;i<$3;i++){
+			for(int i=0;i<$3-1;i++){
 				pts_app_pt(plist,p);;
 			}
 		}
@@ -380,11 +385,11 @@ pt
 r
 	: {$$=1;}
 	| ':' expr {$$=$2;}
-	| ':' '*'	{$$=9999999999;}
+	| ':' '*'	{$$=999999;}
 ;
 
 expr
-  : IDENT {int *res; pdt_var_get(gl_pdt,$1,res);$$=*res;}
+  : IDENT {int res; pdt_var_get(gl_pdt,$1,&res);$$=res;}
   | CNUM {$$=$1;}
 	| '-' expr %prec UMINUS {$$=0-$2;}
 	| '+' expr %prec UMINUS {$$=$2;}
@@ -401,6 +406,8 @@ declaration
 ;
 
 %%
+#include "labgen.yy.c"
+
 /*======================================================================*/
 /*= program argument                                                   =*/
 
@@ -457,6 +464,8 @@ int main(int argc, char*argv[])
     gl_infname = strdup(basename(p));
     free(p);
 
+
+
     gl_pdt = pdt_new();
     gl_lds = lds_new();
 
@@ -469,8 +478,9 @@ int main(int argc, char*argv[])
     //yydestroy();
 
     // check semantique
-    if ( lg_sem(gl_lds, gl_pdt) )
+    if ( lg_sem(gl_lds, gl_pdt) ){
         return 1; // mess. printed by lg_sem
+			}
     pdt_free( gl_pdt );
 
     // génération of labres lex & yacc codes
@@ -496,6 +506,7 @@ int main(int argc, char*argv[])
         return 1; // mess. printed by lg_gen
     fclose(lstream); fclose(ystream);
     lds_free( gl_lds );
+
 
     // génération of labres from lfname (lex) and yfname (yacc) files
     int status=0;
